@@ -6,6 +6,7 @@ const getCollectionFn = (collection) => {
   return async () => {
     if (!_col) {
       const db = await dbConnection();
+      //console.log("Connected to database:", db.databaseName);
       _col = await db.collection(collection);
     }
 
@@ -14,4 +15,4 @@ const getCollectionFn = (collection) => {
 };
 
 export const users = getCollectionFn('users');
-export const cooks = getCollectionFn('shows');
+export const shows = getCollectionFn('shows');

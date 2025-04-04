@@ -1,11 +1,12 @@
 import { dbConnection, closeConnection } from './config/mongoConnection.js';
-import { shows } from '../config/mongoCollections.js';
+import { shows } from './config/mongoCollections.js';
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const sampleShows = [
     {
+        id: "1",
         title: "Stranger Things",
         description: "A thrilling Netflix original...",
         genre: "Sci-Fi",
@@ -14,6 +15,7 @@ const sampleShows = [
         videoUrl: "https://dummyvideo.com/trailer1.mp4"
     },
     {
+        id: "2",
         title: "Breaking Bad",
         description: "A chemistry teacher turns meth cook...",
         genre: "Drama",
@@ -22,6 +24,7 @@ const sampleShows = [
         videoUrl: "https://dummyvideo.com/trailer2.mp4"
     },
     {
+        id: "3",
         title: "Money Heist",
         description: "A Spanish heist crime drama...",
         genre: "Thriller",

@@ -1,6 +1,6 @@
-import * as showsDataFunctions from './shows.js';
-import * as watchlistDataFunctions from './watchlist.js';
-import * as authDataFunctions from './auth.js';
+import showsDataFunctions from './shows.js';
+import watchlistDataFunctions from './watchlist.js';
+import authDataFunctions from './auth.js';
 
 export const showsData = showsDataFunctions;
 export const watchlistData = watchlistDataFunctions;
