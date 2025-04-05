@@ -1,6 +1,17 @@
 import express from 'express';
-const app = express();
+import cors from 'cors';
 import configRoutesFunction from './routes/index.js';
+
+
+const app = express();
+const corsOptions = {
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PATCH'] // Allowed HTTP methods
+};
+
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 configRoutesFunction(app);
 

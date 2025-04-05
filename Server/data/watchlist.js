@@ -1,18 +1,33 @@
 import { users } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
+import { authData, showsData } from '../data/index.js';
 import { validateEmail, validateId } from '../helper.js';
 
+const getUserWatchlist = async (email) => {
+    let watchlistData = [];
+    const existingUser = await authData.getUserByEmail(email);
+    const watchlistArr = existingUser.watchlist;
+    for (const showId of watchlistArr) {
+        try {
+            const show = await showsData.getShowById(showId.toString());
+            watchlistData.push(show);
+        } catch (e) {
+            console.error(`Skipping show ${showId}:`, e);
+        }
+    }
+    return watchlistData;
+}
+
 const addToUserWatchlist = async (userId, showId) => {
-    //id = validateId(id, 'id');// assuming it is ObjectId
+    //id = validateId(id, 'id');// assuming it is ObjectId    
     userId = validateId(userId, 'userId');
     showId = validateId(showId, 'showId');
     const usersCollection = await users();
-    const existingUser = await usersCollection.findOne({ _id: userId });
+    const existingUser = await usersCollection.findOne({ _id: ObjectId.createFromHexString(userId) });
     const result = await usersCollection.updateOne(
-        { _id: new ObjectId(userId) },
-        { $addToSet: { watchlist: showId } }
+        { _id: ObjectId.createFromHexString(userId) },
+        { $addToSet: { watchlist: ObjectId.createFromHexString(showId) } }
     );
-
     return result;
 };
 
@@ -20,17 +35,17 @@ const removeFromUserWatchlist = async (userId, showId) => {
     userId = validateId(userId, 'userId');
     showId = validateId(showId, 'showId');
     const usersCollection = await users();
-    const existingUser = await usersCollection.findOne({ _id: userId });
-    const result = await db.collection("users").updateOne(
-        { _id: new ObjectId(userId) },
-        { $pull: { watchlist: showId } }
+    const existingUser = await usersCollection.findOne({ _id: ObjectId.createFromHexString(userId) });
+    const result = await usersCollection.updateOne(
+        { _id: ObjectId.createFromHexString(userId) },
+        { $pull: { watchlist: ObjectId.createFromHexString(showId) } }
     );
     return result;
 }
 
 
 export default {
-    addToUserWatchlist, removeFromUserWatchlist
+    addToUserWatchlist, removeFromUserWatchlist, getUserWatchlist
 }
 
 

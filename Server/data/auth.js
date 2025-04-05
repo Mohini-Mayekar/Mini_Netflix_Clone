@@ -5,11 +5,20 @@ import { validateEmail, validatePass } from '../helper.js';
 
 const saltRounds = 16;
 
-const getUserByEmail = async (email) => {
+const checkDuplicateEmail = async (email) => {
     email = validateEmail(email, 'Email');
     const usersCollection = await users();
     const existingUser = await usersCollection.findOne({ email: email });
     if (existingUser != null) throw `User with email ${email} already exist.`;
+    //delete existingUser._id;
+    return existingUser;
+}
+
+const getUserByEmail = async (email) => {
+    email = validateEmail(email, 'Email');
+    const usersCollection = await users();
+    const existingUser = await usersCollection.findOne({ email: email });
+    if (existingUser == null) throw `User with email ${email} does not exist.`;
     //delete existingUser._id;
     return existingUser;
 }
@@ -21,7 +30,8 @@ const registerUser = async (email, pass) => {
     let newUser = {
         email: email,
         pass: hash,
-        watchlist: []
+        watchlist: [],
+        refreshToken: null
     }
     const usersCollection = await users();
     const insertInfo = await usersCollection.insertOne(newUser);
@@ -31,9 +41,26 @@ const registerUser = async (email, pass) => {
     return { signupCompleted: true };
 }
 
+const updateToken = async (email, token) => {
+    const usersCollection = await users();
+    await usersCollection.updateOne(
+        { email: email },
+        { $set: { refreshToken: token } }
+    );
+}
+
+const getToken = async (email, token) => {
+    const usersCollection = await users();
+    const user = await usersCollection.findOne({
+        email: email,
+        refreshToken: token
+    });
+    return user;
+}
+
 
 export default {
-    getUserByEmail, registerUser
+    getUserByEmail, registerUser, checkDuplicateEmail, updateToken, getToken
 }
 
 

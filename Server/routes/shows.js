@@ -1,6 +1,6 @@
 import express from 'express';
 import { showsData } from '../data/index.js';
-import { errorMsg, validateIdStrInt } from '../helper.js';
+import { errorMsg, validateId } from '../helper.js';
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ router.route('/')
 router.route('/:id')
     .get(async (req, res) => {
         try {
-            req.params.id = validateIdStrInt(req.params.id, 'id URL Param');
+            req.params.id = validateId(req.params.id, 'id URL Param');
         } catch (e) {
             res.status(400).json(errorMsg(e));
             return;
