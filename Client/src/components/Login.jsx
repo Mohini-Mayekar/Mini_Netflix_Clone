@@ -4,24 +4,59 @@ import axios from 'axios';
 import { AuthContext } from '../contexts/AuthContext';
 import { apiConfig } from '../api/ApiConfig';
 import { Box, TextField, Button, Typography, Alert, CircularProgress } from '@mui/material';
+import { validateEmail, validatePass } from '../helper.js';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [pass, setPass] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);  // Add loading state
+    const [error, setError] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [loading, setLoading] = useState(false);
     const { setAuth } = useContext(AuthContext);
     const navigate = useNavigate();
 
+    const handleEmailChange = (event) => {
+        setEmail(event.target.value);
+    };
+
+    const handlePassChange = (event) => {
+        setPass(event.target.value);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);  // Set loading to true when submitting
-        setError('');      // Clear any previous errors
+        setLoading(true);
+        setError(false);
+        setErrorMsg('');
 
         try {
-            const response = await axios.post(`${apiConfig.baseUrl}auth/login`, { email, pass });
+            let emailData = document.getElementById('email');
+            let passData = document.getElementById('pass');
+            let emailVal;
+            let passVal;
+            let errors = [];
+            if (emailData) {
+                try {
+                    emailVal = validateEmail(emailData.value, 'Email');
+                } catch (err) {
+                    errors.push(err);
+                }
+            }
+            if (passData) {
+                try {
+                    passVal = validatePass(passData.value, 'Password');
+                } catch (err) {
+                    errors.push(err);
+                }
+            }
+            if (errors.length > 0) {
+                setError(true);
+                setErrorMsg(errors.join('\n'));
+                return;
+            }
+            const response = await axios.post(`${apiConfig.baseUrl}auth/login`, { email: emailVal, pass: passVal });
 
-            // Save tokens in localStorage and context
+            // Saving tokens in localStorage and context
             localStorage.setItem('accessToken', response.data.accessToken);
             localStorage.setItem('refreshToken', response.data.refreshToken);
 
@@ -34,9 +69,10 @@ const Login = () => {
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.error || 'Login failed');
+            setError(true);
+            setErrorMsg(err.response?.data?.error || 'Login failed');
         } finally {
-            setLoading(false);  // Set loading to false when done
+            setLoading(false);
         }
     };
 
@@ -45,24 +81,32 @@ const Login = () => {
             <Typography variant="h4" gutterBottom>
                 Login
             </Typography>
-            {error && <Alert severity="error">{error}</Alert>}
+
+
+            {error && errorMsg.split('\n').map((msg, index) => (
+                <Alert key={index} severity="error" sx={{ marginBottom: 1 }}>
+                    {msg}
+                </Alert>
+            ))}
             <form onSubmit={handleSubmit}>
                 <TextField
+                    id="email"
                     fullWidth
                     label="Email"
                     margin="normal"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={loading}  // Disable field when loading
+                    onChange={(e) => handleEmailChange(e)}
+                    disabled={loading}
                 />
                 <TextField
+                    id="pass"
                     fullWidth
                     type="password"
                     label="Password"
                     margin="normal"
                     value={pass}
-                    onChange={(e) => setPass(e.target.value)}
-                    disabled={loading}  // Disable field when loading
+                    onChange={(e) => handlePassChange(e)}
+                    disabled={loading}
                 />
                 <Button
                     type="submit"
@@ -70,10 +114,10 @@ const Login = () => {
                     color="primary"
                     fullWidth
                     sx={{ marginTop: 2 }}
-                    disabled={loading}  // Disable button when loading
+                    disabled={loading}
                 >
                     {loading ? (
-                        <CircularProgress size={24} color="inherit" />  // Show spinner when loading
+                        <CircularProgress size={24} color="inherit" />
                     ) : (
                         'Login'
                     )}

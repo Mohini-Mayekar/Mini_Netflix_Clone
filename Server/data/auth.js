@@ -7,6 +7,7 @@ const saltRounds = 16;
 
 const checkDuplicateEmail = async (email) => {
     email = validateEmail(email, 'Email');
+    email = email.toLowerCase();
     const usersCollection = await users();
     const existingUser = await usersCollection.findOne({ email: email });
     if (existingUser != null) throw `User with email ${email} already exist.`;
@@ -16,6 +17,7 @@ const checkDuplicateEmail = async (email) => {
 
 const getUserByEmail = async (email) => {
     email = validateEmail(email, 'Email');
+    email = email.toLowerCase();
     const usersCollection = await users();
     const existingUser = await usersCollection.findOne({ email: email });
     if (existingUser == null) throw `User with email ${email} does not exist.`;
@@ -25,6 +27,7 @@ const getUserByEmail = async (email) => {
 
 const registerUser = async (email, pass) => {
     email = validateEmail(email, 'Email');
+    email = email.toLowerCase();
     pass = validatePass(pass, 'Password');
     const hash = await bcrypt.hash(pass, saltRounds);
     let newUser = {
@@ -43,6 +46,7 @@ const registerUser = async (email, pass) => {
 
 const updateToken = async (email, token) => {
     const usersCollection = await users();
+    email = email.toLowerCase();
     await usersCollection.updateOne(
         { email: email },
         { $set: { refreshToken: token } }
@@ -51,6 +55,7 @@ const updateToken = async (email, token) => {
 
 const getToken = async (email, token) => {
     const usersCollection = await users();
+    email = email.toLowerCase();
     const user = await usersCollection.findOne({
         email: email,
         refreshToken: token
