@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import ReactPlayer from "react-player";
 import { apiConfig } from '../api/ApiConfig';
 import { AuthContext } from '../contexts/AuthContext';
+import noImage from '../img/download.jpeg';
 import {
     Box,
     Typography,
@@ -34,7 +36,10 @@ const ShowDetail = () => {
                 if (auth.accessToken) {
                     // Fetch user's watchlist
                     const watchlistResponse = await axios.get(`${apiConfig.baseUrl}watchlist`, {
-                        headers: { Authorization: `Bearer ${auth.token}` },
+                        headers: {
+                            Authorization: `Bearer ${auth.token}`,
+                            User: `${auth.user.email}`
+                        },
                     });
 
                     // Check if the current show is in the user's watchlist
@@ -56,11 +61,12 @@ const ShowDetail = () => {
     const handleWatchlistToggle = async () => {
         try {
             if (isInWatchlist) {
-                // Remove from Watchlist
-                console.log('HERe');
-                console.log(auth.token);
+                // Remove from Watchlist                
                 await axios.patch(`${apiConfig.baseUrl}watchlist`, { showId: id }, {
-                    headers: { Authorization: `Bearer ${auth.token}` },
+                    headers: {
+                        Authorization: `Bearer ${auth.token}`,
+                        User: `${auth.user.email}`
+                    },
                 });
                 setIsInWatchlist(false);
             } else {
@@ -68,7 +74,10 @@ const ShowDetail = () => {
                 console.log('HERe 1');
                 console.log(auth.token);
                 await axios.post(`${apiConfig.baseUrl}watchlist`, { showId: id }, {
-                    headers: { Authorization: `Bearer ${auth.token}` },
+                    headers: {
+                        Authorization: `Bearer ${auth.token}`,
+                        User: `${auth.user.email}`
+                    },
                 });
                 setIsInWatchlist(true);
             }
@@ -86,9 +95,18 @@ const ShowDetail = () => {
                 <Card sx={{ maxWidth: 800, margin: '0 auto' }}>
                     <CardMedia
                         component="img"
-                        height="400"
+                        sx={{
+
+                            height: 600,
+                            width: '100%',
+                            objectFit: 'contain',
+                            bgcolor: 'white.100',
+                        }}
                         image={show.thumbnail}
                         alt={show.title}
+                        onError={(e) => {
+                            e.target.src = noImage;
+                        }}
                     />
                     <CardContent>
                         <Typography variant="h4" gutterBottom>
@@ -104,10 +122,17 @@ const ShowDetail = () => {
                             {show.description}
                         </Typography>
                         <Box sx={{ marginTop: 2 }}>
-                            <video controls style={{ width: '100%' }}>
+                            <ReactPlayer
+                                url={show.videoUrl}
+                                width="100%"
+                                height="300px"
+                                controls={true}
+                                fallback={<div>Your browser does not support this video.</div>}
+                            />
+                            {/* <video controls style={{ width: '100%' }}>
                                 <source src={show.videoUrl} type="video/mp4" />
                                 Your browser does not support the video tag.
-                            </video>
+                            </video> */}
                         </Box>
                         {auth.accessToken && (
                             <Button

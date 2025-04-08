@@ -3,11 +3,21 @@ import { ObjectId } from 'mongodb';
 import { authData, showsData } from '../data/index.js';
 import { validateEmail, validateId } from '../helper.js';
 
-const getUserWatchlist = async (email) => {
+const getUserWatchlist = async (email, page, limit) => {
     let watchlistData = [];
     const existingUser = await authData.getUserByEmail(email);
+    if (typeof page !== 'number' || page < 1) throw "Page must be a positive number";
+    if (typeof limit !== 'number' || limit < 1) throw "Limit must be a positive number";
     const watchlistArr = existingUser.watchlist;
-    for (const showId of watchlistArr) {
+    const totalCount = watchlistArr.length;
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    let paginatedWatchlistArr = watchlistArr.slice(startIndex, endIndex);
+    if (paginatedWatchlistArr.length == 0) {
+        paginatedWatchlistArr = watchlistArr.slice(0, limit);
+    }
+    for (const showId of paginatedWatchlistArr) {
         try {
             const show = await showsData.getShowById(showId.toString());
             watchlistData.push(show);
@@ -15,7 +25,10 @@ const getUserWatchlist = async (email) => {
             console.error(`Skipping show ${showId}:`, e);
         }
     }
-    return watchlistData;
+    return {
+        watchlist: watchlistData,
+        totalCount: totalCount
+    };
 }
 
 const addToUserWatchlist = async (userId, showId) => {

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../contexts/AuthContext';
 import { apiConfig } from '../api/ApiConfig';
@@ -77,7 +77,16 @@ const Login = () => {
     };
 
     return (
-        <Box sx={{ maxWidth: 400, margin: '50px auto', padding: 3 }}>
+        <Box
+            sx={{
+                maxWidth: 400,
+                margin: '50px auto',
+                padding: 3,
+                boxShadow: 3,
+                borderRadius: 2,
+                textAlign: 'center',
+            }}
+        >
             <Typography variant="h4" gutterBottom>
                 Login
             </Typography>
@@ -123,6 +132,28 @@ const Login = () => {
                     )}
                 </Button>
             </form>
+
+            <Box sx={{ textAlign: 'center', marginTop: 2 }}>
+                <Typography variant="body2">
+                    Don't have an account?{' '}
+                    {loading ? (
+                        <span style={{ color: 'text.disabled' }}>
+                            Sign up here!
+                        </span>
+                    ) : (
+                        <Link
+                            to="/signup"
+                            style={{
+                                textDecoration: 'none',
+                                color: '#1976d2',
+                                pointerEvents: loading ? 'none' : 'auto'
+                            }}
+                        >
+                            Sign up here!
+                        </Link>
+                    )}
+                </Typography>
+            </Box>
         </Box>
     );
 };

@@ -4,11 +4,20 @@ import { validateId } from '../helper.js';
 
 
 
-const getAllShows = async () => {
+const getAllShows = async (page, limit) => {
+
+    if (typeof page !== 'number' || page < 1) throw 'Page must be a positive number';
+    if (typeof limit !== 'number' || limit < 1) throw 'Limit must be a positive number';
     const showsCollection = await shows();
-    const showsList = await showsCollection.find({}).toArray();
+    const skip = (page - 1) * limit;
+    const showsList = await showsCollection.find({}).skip(skip).limit(limit).toArray();
     if (showsList.length == 0) throw `No Shows present'.`;
-    return showsList;
+
+    const totalCount = await showsCollection.countDocuments();
+    return {
+        shows: showsList,
+        totalCount: totalCount
+    };
 };
 
 const getShowById = async (id) => {

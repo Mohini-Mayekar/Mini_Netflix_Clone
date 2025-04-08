@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import xss from 'xss';
 import dotenv from "dotenv";
 import { authData } from '../data/index.js';
 import { validateEmail, validatePass } from '../helper.js';
@@ -23,9 +24,9 @@ router.route('/signup')
         }
 
         try {
-            email = reqData.email;
+            email = xss(reqData.email);
             email = validateEmail(email, 'Email');
-            pass = reqData.pass;
+            pass = xss(reqData.pass);
             pass = validatePass(pass, 'Password');
         } catch (e) {
             return res.status(400).json({ error: e });
@@ -56,9 +57,9 @@ router.route('/login')
         }
 
         try {
-            email = reqData.email;
+            email = xss(reqData.email);
             email = validateEmail(email, 'Email');
-            pass = reqData.pass;
+            pass = xss(reqData.pass);
             pass = validatePass(pass, 'Password');
         } catch (e) {
             return res.status(400).json({ error: e });

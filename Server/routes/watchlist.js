@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { validateEmail, validateId } from '../helper.js';
+import { validateEmail, validateId, errorMsg } from '../helper.js';
 import { authData, watchlistData } from '../data/index.js';
 import { verifyToken } from '../middleware/authMiddleware.js';
 
@@ -7,6 +7,13 @@ const router = Router();
 router.use(verifyToken);
 router.route('/')
     .get(async (req, res) => {
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 8;
+
+        if (page < 1 || limit < 1) {
+            throw new Error('Page and limit must be positive integers');
+        }
         let reqData = req.user;
         let email;
 
@@ -24,10 +31,10 @@ router.route('/')
         }
 
         try {
-            const existingWatchlist = await watchlistData.getUserWatchlist(email);
-            res.status(200).json({ status: "success", watchlist: existingWatchlist });
+            const { watchlist, totalCount } = await watchlistData.getUserWatchlist(email, page, limit);
+            res.status(200).json({ status: "success", watchlist: watchlist, totalCount: totalCount });
         } catch (e) {
-            return res.status(500).json({ error: e });
+            return res.status(500).json(errorMsg(e));
         }
 
     })

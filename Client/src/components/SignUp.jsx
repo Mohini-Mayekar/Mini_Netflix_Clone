@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { TextField, Button, Typography, Box, Alert } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { TextField, Button, Typography, Box, Alert, CircularProgress } from '@mui/material';
 import { apiConfig } from '../api/ApiConfig';
 import { validateEmail, validatePass } from '../helper.js';
 
@@ -116,6 +116,28 @@ const Signup = () => {
                     )}
                 </Button>
             </form>
+
+            <Box sx={{ textAlign: 'center', marginTop: 2 }}>
+                <Typography variant="body2">
+                    Already have an account?{' '}
+                    {loading ? (
+                        <span style={{ color: 'text.disabled', cursor: 'default' }}>
+                            Log in here!
+                        </span>
+                    ) : (
+                        <Link
+                            to="/"
+                            style={{
+                                textDecoration: 'none',
+                                color: '#1976d2',
+                                pointerEvents: loading ? 'none' : 'auto'
+                            }}
+                        >
+                            Log in here!
+                        </Link>
+                    )}
+                </Typography>
+            </Box>
         </Box>
     );
 };

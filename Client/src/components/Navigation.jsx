@@ -17,7 +17,13 @@ const Navigation = () => {
     };
 
     return (
-        <AppBar position="static" >
+        <AppBar position="relative"
+            sx={{
+                width: 'auto',
+                alignContent: 'center',
+                alignItems: 'center'
+            }}
+        >
             <Toolbar>
                 {/* <Typography variant="h6" sx={{ flexGrow: 1 }}>
                     Mini Netflix Clone
@@ -49,14 +55,7 @@ const Navigation = () => {
                 )}
             </Toolbar>
         </AppBar>
-        // return (
-        //         <nav>
-        //             {/* ... existing nav links ... */}
-        //             {auth?.token && (
-        //                 <button onClick={handleLogout}>Logout</button>
-        //             )}
-        //         </nav>
-        //     );
+
     );
 };
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { apiConfig } from '../api/ApiConfig';
 import { AuthContext } from '../contexts/AuthContext';
+import noImage from '../img/download.jpeg';
 import {
     Grid,
     Card,
@@ -12,38 +13,47 @@ import {
     Alert,
     Button,
     Box,
-    Tooltip,
-    IconButton
+    Pagination
 } from '@mui/material';
-import { Bookmark, BookmarkBorder } from '@mui/icons-material';
-
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
     const [shows, setShows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [watchlistStatus, setWatchlistStatus] = useState({}); // Track watchlist status per show
+    const [watchlistStatus, setWatchlistStatus] = useState({});
     const { auth } = useContext(AuthContext);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const itemsPerPage = 8;
 
-    // Fetch shows and watchlist status
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch shows
-                const showsResponse = await axios.get(`${apiConfig.baseUrl}shows/`);
+                setLoading(true);
+                const showsResponse = await axios.get(`${apiConfig.baseUrl}shows/`, {
+                    params: {
+                        page: currentPage,
+                        limit: itemsPerPage
+                    }
+                });
+
                 if (!Array.isArray(showsResponse.data.shows)) {
                     throw new Error('Invalid data format');
                 }
+                //console.log(showsResponse);
                 setShows(showsResponse.data.shows);
+                setTotalPages(Math.ceil(showsResponse.data.totalCount / itemsPerPage));
 
-                // Fetch watchlist if user is authenticated
+
                 if (auth.accessToken) {
                     const watchlistResponse = await axios.get(`${apiConfig.baseUrl}watchlist`, {
-                        headers: { Authorization: `Bearer ${auth.accessToken}` },
+                        headers: {
+                            Authorization: `Bearer ${auth.accessToken}`,
+                            User: `${auth.user.email}`
+                        },
                     });
 
-                    // Create a map of watchlist status
                     const statusMap = {};
                     showsResponse.data.shows.forEach(show => {
                         statusMap[show._id] = watchlistResponse.data?.watchlist?.some(
@@ -62,7 +72,12 @@ const Dashboard = () => {
         };
 
         fetchData();
-    }, [auth.accessToken]);
+    }, [auth.accessToken, currentPage]);
+
+
+    const handlePageChange = (event, value) => {
+        setCurrentPage(value);
+    };
 
     // Toggle watchlist status
     const handleWatchlistToggle = async (showId) => {
@@ -77,12 +92,18 @@ const Dashboard = () => {
             if (isCurrentlyInWatchlist) {
                 // Remove from watchlist
                 await axios.patch(`${apiConfig.baseUrl}watchlist`, { showId }, {
-                    headers: { Authorization: `Bearer ${auth.accessToken}` },
+                    headers: {
+                        Authorization: `Bearer ${auth.accessToken}`,
+                        User: `${auth.user.email}`
+                    },
                 });
             } else {
                 // Add to watchlist
                 await axios.post(`${apiConfig.baseUrl}watchlist`, { showId }, {
-                    headers: { Authorization: `Bearer ${auth.accessToken}` },
+                    headers: {
+                        Authorization: `Bearer ${auth.accessToken}`,
+                        User: `${auth.user.email}`
+                    },
                 });
             }
 
@@ -104,24 +125,49 @@ const Dashboard = () => {
             <Typography variant="h4" gutterBottom>
                 Shows
             </Typography>
-            <Grid container spacing={3}>
+            <Grid container spacing={3}
+                sx={{
+                    flexGrow: 1,
+                    flexDirection: 'row'
+                }}>
                 {shows.map((show) => (
-                    <Grid item xs={12} sm={6} md={4} key={show._id}>
-                        <Card sx={{
-                            width: 300,  // Fixed width (px)
-                            height: 400, // Fixed height (px)
-                            display: 'flex',
-                            flexDirection: 'column'
-                        }}>
+                    <Grid show xs={12} sm={7} md={5} lg={4} xl={3} key={show._id}>
+                        <Card variant='outlined'
+                            sx={{
+                                width: 250,
+                                height: 400,
+                                margin: '0 auto',
+                                borderRadius: 2,
+                                boxShadow: '0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                overflow: 'hidden',
+                                position: 'relative',
+                            }}
+                        >
 
                             <CardMedia
                                 component="img"
-                                height="200"
+                                sx={{
+
+                                    height: 200,
+                                    width: '100%',
+                                    objectFit: 'contain',
+                                    bgcolor: 'white.100',
+                                }}
                                 image={show.thumbnail}
                                 alt={show.title}
+                                onError={(e) => {
+                                    e.target.src = noImage;
+                                }}
                             />
 
-                            <CardContent>
+                            <CardContent
+                                sx={{
+                                    flexGrow: 1,
+                                    overflow: 'hidden',
+                                }}
+                            >
                                 <Typography variant="h6" component="div">
                                     <Link to={`/shows/${show._id}`}>
                                         {show.title}
@@ -130,49 +176,54 @@ const Dashboard = () => {
                                 <Typography variant="body2" color="text.secondary" paragraph>
                                     {show.description}
                                 </Typography>
-                                {auth.accessToken && (
-                                    <Button
-                                        variant={watchlistStatus[show._id] ? 'outlined' : 'contained'}
-                                        color={watchlistStatus[show._id] ? 'secondary' : 'primary'}
-                                        onClick={() => handleWatchlistToggle(show._id)}
-                                        fullWidth
-                                        size="small"
-                                    >
-                                        {watchlistStatus[show._id] ? 'Remove from Watchlist' : 'Add to Watchlist'}
-                                    </Button>
-                                    // <Tooltip
-                                    //     title={watchlistStatus[show._id] ? "Remove from watchlist" : "Add to watchlist"}
-                                    //     arrow
-                                    //     placement="top"
-                                    // >
-                                    //     <IconButton
-                                    //         onClick={(e) => {
-                                    //             e.stopPropagation(); // Prevent card click if needed
-                                    //             handleWatchlistToggle(show._id);
-                                    //         }}
-                                    //         color={watchlistStatus[show._id] ? "primary" : "default"}
-                                    //         sx={{
-                                    //             '&:hover': {
-                                    //                 backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                    //             }
-                                    //         }}
-                                    //     >
-                                    //         {watchlistStatus[show._id] ? (
-                                    //             <Bookmark color="primary" />
-                                    //         ) : (
-                                    //             <BookmarkBorder />
-                                    //         )}
-                                    //     </IconButton>
-                                    // </Tooltip>
 
+                                {auth.accessToken && (
+                                    <Box
+                                        sx={{
+                                            position: 'absolute',
+                                            bottom: 0,
+                                            left: 0,
+                                            right: 0,
+                                            p: 2,
+                                            bgcolor: 'background.paper',
+                                            borderColor: 'divider',
+                                        }}
+                                    >
+                                        <Button
+                                            variant={watchlistStatus[show._id] ? 'outlined' : 'contained'}
+                                            color={watchlistStatus[show._id] ? 'secondary' : 'primary'}
+                                            onClick={() => handleWatchlistToggle(show._id)}
+                                            fullWidth
+                                            size="small"
+                                        >
+                                            {watchlistStatus[show._id] ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                                        </Button>
+                                    </Box>
                                 )}
+
                             </CardContent>
 
                         </Card>
                     </Grid>
                 ))}
             </Grid>
-        </Box >
+
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={handlePageChange}
+                    color="primary"
+                    showFirstButton
+                    showLastButton
+                    sx={{
+                        '& .MuiPaginationItem-root': {
+                            color: 'text.primary',
+                        },
+                    }}
+                />
+            </Box>
+        </Box>
     );
 };
 
